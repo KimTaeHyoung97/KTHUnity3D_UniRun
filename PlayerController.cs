@@ -20,66 +20,83 @@ public class PlayerController : MonoBehaviour {
         playerAudio = GetComponent<AudioSource>();
    }
 
-   private void Update() {
+    
+        
 
+   private void Update() 
+    {
         // 사용자 입력을 감지하고 점프하는 처리
-        if (isDead) return;
+        if (isDead)
+        {
+            return;
+        }
 
-        if(Input.GetMouseButtonDown(0)&&jumpCount <2)
+        if (Input.GetMouseButtonDown(0) && jumpCount < 2)
         {
             jumpCount++;
-
             playerRigidbody.velocity = Vector2.zero;
-            playerRigidbody.AddForce(new Vector2(0,jumpForce));
+            playerRigidbody.AddForce(new Vector2(0, jumpForce));
             playerAudio.Play();
         }
-        else if(Input.GetMouseButtonUp(0)&&playerRigidbody.velocity.y>0)
+
+        else if (Input.GetMouseButtonUp(0) && playerRigidbody.velocity.y > 0)
         {
             playerRigidbody.velocity *= .5f;
         }
 
-        animator.SetBool("Grounded",isGrounded);
+        animator.SetBool("Grounded", isGrounded);
 
-   }
+        OnSkill();
+    }
 
-   private void Die() 
-   {
+   private void Die() {
         // 사망 처리
         isDead = true;
-
-        animator.SetTrigger("Die");
-
+        animator.SetTrigger("Dead");
         playerAudio.clip = deathClip;
         playerAudio.Play();
-
         playerRigidbody.velocity = Vector2.zero;
 
         GameManager.instance.OnPlayerDead();
-   }
+    }
 
-   private void OnTriggerEnter2D(Collider2D other) 
-   {
-       // 트리거 콜라이더를 가진 장애물과의 충돌을 감지
-       if(other.CompareTag("Dead")&& !isDead)
-       {
+   private void OnTriggerEnter2D(Collider2D other) {
+        // 트리거 콜라이더를 가진 장애물과의 충돌을 감지
+        
+        if (other.CompareTag("Dead") && !isDead)
+        {
             Die();
-       }
-   }
+        }
+        if (other.CompareTag("Coin") && !isDead)
+        {
+            GameManager.instance.AddScore(1);
+            Destroy(other.gameObject);
+        }
+    }
 
-   private void OnCollisionEnter2D(Collision2D collision) 
-   {
-        // 바닥에 닿았음을 감지하는 처리
-        // contacts[0] -> 가장 먼저 접촉한 지점
-        if (collision.contacts[0].normal.y>.7f)
+   private void OnCollisionEnter2D(Collision2D collision) {
+       // 바닥에 닿았음을 감지하는 처리
+       if(collision.contacts[0].normal.y > 0.7f)
         {
             isGrounded = true;
             jumpCount = 0;
         }
-   }
+        
+    }
 
-   private void OnCollisionExit2D(Collision2D collision) 
-   {
+   private void OnCollisionExit2D(Collision2D collision) {
         // 바닥에서 벗어났음을 감지하는 처리
-        isGrounded = false;  
+        isGrounded = false;
    }
+   public void OnSkill()
+    {
+        if (Input.GetKeyDown(KeyCode.Space) && GameManager.instance.skillguageImage.fillAmount == 1)
+        {
+             
+            GameManager.instance.skillguageImage.fillAmount = 0;
+            GameManager.instance.isSkillGauge = false;
+            GameManager.instance.SkillGaugeRatioText.gameObject.SetActive(false);
+            GameManager.instance.skillText.gameObject.SetActive(false);
+        }
+    }
 }
